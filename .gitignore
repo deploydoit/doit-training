@@ -1,0 +1,33 @@
+# Banco de dados: training.db É VERSIONADO (contém todo o conteúdo do treinamento)
+# Apenas arquivos temporários do SQLite são ignorados:
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Ambientes virtuais
+venv/
+.venv/
+env/
+.env
+
+# Testes / property-based testing
+.pytest_cache/
+.hypothesis/
+
+# Sistema operacional
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+
+# Streamlit
+.streamlit/secrets.toml

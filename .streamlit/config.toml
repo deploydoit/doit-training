@@ -1,0 +1,17 @@
+[theme]
+base = "light"
+primaryColor = "#F5C085"
+backgroundColor = "#F4F4F4"
+secondaryBackgroundColor = "#FFFFD6"
+textColor = "#404040"
+
+[server]
+maxUploadSize = 200
+maxMessageSize = 200
+runOnSave = true
+
+[runner]
+magicEnabled = false
+
+[browser]
+gatherUsageStats = false

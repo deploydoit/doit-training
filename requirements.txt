@@ -1,0 +1,4 @@
+streamlit==1.45.1
+hypothesis==6.131.28
+pytest==8.4.1
+watchdog==6.0.0
