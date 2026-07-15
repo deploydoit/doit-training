@@ -107,20 +107,7 @@ Os documentos podem estar vinculados a:
 
 def _show_image(path):
     """Mostra imagem centralizada."""
-    import base64
-    from pathlib import Path
-    app_dir = Path(__file__).resolve().parent.parent
-    img_path = app_dir / path
-    if img_path.exists():
-        img_bytes = img_path.read_bytes()
-        suffix = img_path.suffix.lower().replace('.', '')
-        mime = f"image/{suffix}"
-        b64 = base64.b64encode(img_bytes).decode()
-        st.markdown(
-            f'<div style="text-align:center;margin:12px 0;">'
-            f'<img src="data:{mime};base64,{b64}" '
-            f'style="width:100%;max-width:460px;height:auto;border-radius:8px;display:inline-block;'
-            f'image-orientation:from-image;">'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+    try:
+        st.image(path, use_container_width=True)
+    except Exception:
+        st.caption(f"Imagem não encontrada: {path}")

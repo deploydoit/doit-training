@@ -150,73 +150,36 @@ def _render_content_fallback(content_item) -> None:
     if content_item.content_type == ContentType.TEXT:
         st.markdown(content_item.content_data)
     elif content_item.content_type == ContentType.IMAGE:
-        # Renderizar via HTML para manter qualidade (sem compressão do st.image)
-        import base64
+        # Usar st.image nativo — funciona local e no Streamlit Cloud
         from pathlib import Path
-        # Tentar múltiplos caminhos (compatível com Cloud e local)
-        app_dir = Path(__file__).resolve().parent.parent
-        candidates = [
-            app_dir / content_item.content_data,
-            Path(content_item.content_data),
-            Path.cwd() / content_item.content_data,
-        ]
-        img_path = None
-        for c in candidates:
-            if c.exists():
-                img_path = c
+        img_path = content_item.content_data
+        # Larguras personalizadas por imagem (em pixels)
+        max_width_por_imagem = {
+            "visualizacao.png": 150,
+            "notificacaorecado.png": 50,
+            "salvar.png": 200,
+            "salvareenviar.png": 200,
+            "criarata.png": 200,
+            "lancarhoras.png": 200,
+        }
+        # Verificar se tem largura customizada
+        custom_width = None
+        for nome, largura in max_width_por_imagem.items():
+            if img_path.endswith(nome):
+                custom_width = largura
                 break
-        if img_path is not None:
-            img_bytes = img_path.read_bytes()
-            suffix = img_path.suffix.lower()
-            mime = "image/gif" if suffix == ".gif" else f"image/{suffix.replace('.', '')}"
-            b64 = base64.b64encode(img_bytes).decode()
-            alt = content_item.alt_text or ""
-            # Largura máxima padrão das imagens de conteúdo.
-            # Para ajustar uma imagem específica, adicione o nome do arquivo aqui.
-            max_width_por_imagem = {
-                "visualizacao.png": 150,
-                "notificacaorecado.png": 50,
-            }
-            caminho = content_item.content_data
-            max_w = 440
-            for nome, largura in max_width_por_imagem.items():
-                if caminho.endswith(nome):
-                    max_w = largura
-                    break
-            st.markdown(
-                f'<div style="text-align:center;margin:16px 0;">'
-                f'<img src="data:{mime};base64,{b64}" alt="{alt}" '
-                f'style="max-width:{max_w}px;width:100%;'
-                f'height:auto;border-radius:8px;'
-                f'display:inline-block;image-orientation:from-image;">'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-        else:
-            # Fallback: usar st.image que resolve caminhos no Streamlit Cloud
-            try:
-                st.image(content_item.content_data, use_container_width=True)
-            except Exception:
-                st.caption(f"⚠️ Imagem não encontrada: {content_item.content_data}")
+        try:
+            if custom_width:
+                st.image(img_path, width=custom_width)
+            else:
+                st.image(img_path, use_container_width=True)
+        except Exception:
+            st.caption(f"Imagem não encontrada: {img_path}")
     elif content_item.content_type == ContentType.VIDEO:
-        from pathlib import Path
-        app_dir = Path(__file__).resolve().parent.parent
-        candidates = [
-            app_dir / content_item.content_data,
-            Path(content_item.content_data),
-            Path.cwd() / content_item.content_data,
-        ]
-        video_path = None
-        for c in candidates:
-            if c.exists():
-                video_path = c
-                break
-        if video_path is not None:
-            col1, col2, col3 = st.columns([2, 2, 2])
-            with col2:
-                st.video(str(video_path))
-        else:
+        try:
             st.video(content_item.content_data)
+        except Exception:
+            st.caption(f"Vídeo não encontrado: {content_item.content_data}")
     elif content_item.content_type == ContentType.LINK:
         label = content_item.alt_text or content_item.content_data
         st.markdown(
