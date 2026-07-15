@@ -164,6 +164,7 @@ def _render_content_fallback(content_item) -> None:
             # Para ajustar uma imagem específica, adicione o nome do arquivo aqui.
             max_width_por_imagem = {
                 "visualizacao.png": 150,
+                "notificacaorecado.png": 50,
             }
             caminho = content_item.content_data
             max_w = 440
@@ -224,80 +225,69 @@ def _render_navigation_buttons(
         is_first: Se é a primeira etapa do caminho.
         is_last: Se é a última etapa do caminho.
     """
-    # CSS para estilização dos botões de navegação fixos no rodapé
+    # CSS para estilização dos botões de navegação
     st.markdown(
         """
         <style>
-        /* Espaço extra no final para o conteúdo não ficar atrás dos botões */
-        .main .block-container {
-            padding-bottom: 80px !important;
-        }
         div[data-testid="stColumns"] button {
             min-height: 44px;
             min-width: 44px;
             padding: 0.5rem 1rem;
-        }
-        /* Estilo do container fixo no rodapé */
-        [data-testid="stBottom"] {
-            background-color: #FAFAFA;
-            border-top: 1px solid #E0E0E0;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # Botões fixos no rodapé da tela
-    with st._bottom:
-        col_back, col_spacer, col_forward = st.columns([1, 2, 1])
+    col_back, col_spacer, col_forward = st.columns([1, 2, 1])
 
-        # Botão retroceder
-        with col_back:
+    # Botão retroceder
+    with col_back:
+        st.button(
+            "← Anterior",
+            key="btn_previous",
+            disabled=is_first,
+            on_click=_on_previous_click,
+            kwargs={
+                "step": step,
+                "training_manager": training_manager,
+                "module_id": module_id,
+            },
+            use_container_width=True,
+        )
+
+    # Botão avançar / concluir
+    with col_forward:
+        if is_last:
             st.button(
-                "← Anterior",
-                key="btn_previous",
-                disabled=is_first,
-                on_click=_on_previous_click,
+                "Concluir Módulo ",
+                key="btn_complete",
+                
+                on_click=_on_complete_click,
                 kwargs={
                     "step": step,
                     "training_manager": training_manager,
+                    "progress_manager": progress_manager,
+                    "user_id": user_id,
                     "module_id": module_id,
                 },
                 use_container_width=True,
             )
-
-        # Botão avançar / concluir
-        with col_forward:
-            if is_last:
-                st.button(
-                    "Concluir Módulo ",
-                    key="btn_complete",
-                    
-                    on_click=_on_complete_click,
-                    kwargs={
-                        "step": step,
-                        "training_manager": training_manager,
-                        "progress_manager": progress_manager,
-                        "user_id": user_id,
-                        "module_id": module_id,
-                    },
-                    use_container_width=True,
-                )
-            else:
-                st.button(
-                    "Próxima →",
-                    key="btn_next",
-                    
-                    on_click=_on_next_click,
-                    kwargs={
-                        "step": step,
-                        "training_manager": training_manager,
-                        "progress_manager": progress_manager,
-                        "user_id": user_id,
-                        "module_id": module_id,
-                    },
-                    use_container_width=True,
-                )
+        else:
+            st.button(
+                "Próxima →",
+                key="btn_next",
+                
+                on_click=_on_next_click,
+                kwargs={
+                    "step": step,
+                    "training_manager": training_manager,
+                    "progress_manager": progress_manager,
+                    "user_id": user_id,
+                    "module_id": module_id,
+                },
+                use_container_width=True,
+            )
 
 
 def _on_previous_click(
