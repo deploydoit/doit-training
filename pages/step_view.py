@@ -94,6 +94,28 @@ def render_step(
     )
 
 
+def _render_text_with_icons(text):
+    """Renderiza texto. Trata marcadores [ICON:nome] como imagens st.image()."""
+    import re
+    if '[ICON:' in text:
+        icon_map = {
+            'star': 'media/agenda/star.png',
+            'lixeira': 'media/lixeira.png',
+        }
+        parts = re.split(r'(\[ICON:\w+\])', text)
+        for part in parts:
+            match = re.match(r'\[ICON:(\w+)\]', part)
+            if match:
+                icon_name = match.group(1)
+                icon_path = icon_map.get(icon_name)
+                if icon_path:
+                    st.image(icon_path, width=24)
+            elif part.strip():
+                st.markdown(part, unsafe_allow_html=True)
+    else:
+        st.markdown(text, unsafe_allow_html=True)
+
+
 def _render_step_content(step: Step) -> None:
     """Renderiza o conteúdo multimídia de uma etapa.
 
@@ -112,26 +134,7 @@ def _render_step_content(step: Step) -> None:
 
     def _render_text(text):
         """Renderiza texto. Trata marcadores [ICON:nome] como imagens inline."""
-        if '[ICON:' in text:
-            import re
-            # Mapa de ícones para caminhos de arquivo
-            icon_map = {
-                'star': 'media/agenda/star.png',
-                'lixeira': 'media/lixeira.png',
-            }
-            # Dividir texto pelos marcadores de ícone
-            parts = re.split(r'(\[ICON:\w+\])', text)
-            for part in parts:
-                match = re.match(r'\[ICON:(\w+)\]', part)
-                if match:
-                    icon_name = match.group(1)
-                    icon_path = icon_map.get(icon_name)
-                    if icon_path:
-                        st.image(icon_path, width=24)
-                elif part.strip():
-                    st.markdown(part, unsafe_allow_html=True)
-        else:
-            st.markdown(text, unsafe_allow_html=True)
+        _render_text_with_icons(text)
 
     # 1. Texto: primeira metade (até ---) antes da mídia
     for content_item in texts:
@@ -171,7 +174,7 @@ def _render_content_fallback(content_item) -> None:
     from models.enums import ContentType
 
     if content_item.content_type == ContentType.TEXT:
-        st.markdown(content_item.content_data)
+        _render_text_with_icons(content_item.content_data)
     elif content_item.content_type == ContentType.IMAGE:
         # Usar st.image nativo — funciona local e no Streamlit Cloud
         img_path = content_item.content_data
