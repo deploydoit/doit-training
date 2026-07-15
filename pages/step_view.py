@@ -153,10 +153,19 @@ def _render_content_fallback(content_item) -> None:
         # Renderizar via HTML para manter qualidade (sem compressão do st.image)
         import base64
         from pathlib import Path
-        # Resolver caminho relativo ao diretório do app (funciona no Cloud)
+        # Tentar múltiplos caminhos (compatível com Cloud e local)
         app_dir = Path(__file__).resolve().parent.parent
-        img_path = app_dir / content_item.content_data
-        if img_path.exists():
+        candidates = [
+            app_dir / content_item.content_data,
+            Path(content_item.content_data),
+            Path.cwd() / content_item.content_data,
+        ]
+        img_path = None
+        for c in candidates:
+            if c.exists():
+                img_path = c
+                break
+        if img_path is not None:
             img_bytes = img_path.read_bytes()
             suffix = img_path.suffix.lower()
             mime = "image/gif" if suffix == ".gif" else f"image/{suffix.replace('.', '')}"
@@ -184,12 +193,25 @@ def _render_content_fallback(content_item) -> None:
                 unsafe_allow_html=True,
             )
         else:
-            st.image(content_item.content_data, use_container_width=True)
+            # Fallback: usar st.image que resolve caminhos no Streamlit Cloud
+            try:
+                st.image(content_item.content_data, use_container_width=True)
+            except Exception:
+                st.caption(f"⚠️ Imagem não encontrada: {content_item.content_data}")
     elif content_item.content_type == ContentType.VIDEO:
         from pathlib import Path
         app_dir = Path(__file__).resolve().parent.parent
-        video_path = app_dir / content_item.content_data
-        if video_path.exists():
+        candidates = [
+            app_dir / content_item.content_data,
+            Path(content_item.content_data),
+            Path.cwd() / content_item.content_data,
+        ]
+        video_path = None
+        for c in candidates:
+            if c.exists():
+                video_path = c
+                break
+        if video_path is not None:
             col1, col2, col3 = st.columns([2, 2, 2])
             with col2:
                 st.video(str(video_path))
