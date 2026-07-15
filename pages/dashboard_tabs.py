@@ -109,7 +109,8 @@ def _show_image(path):
     """Mostra imagem centralizada."""
     import base64
     from pathlib import Path
-    img_path = Path(path)
+    app_dir = Path(__file__).resolve().parent.parent
+    img_path = app_dir / path
     if img_path.exists():
         img_bytes = img_path.read_bytes()
         suffix = img_path.suffix.lower().replace('.', '')

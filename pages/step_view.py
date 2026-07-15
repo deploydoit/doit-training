@@ -153,7 +153,9 @@ def _render_content_fallback(content_item) -> None:
         # Renderizar via HTML para manter qualidade (sem compressão do st.image)
         import base64
         from pathlib import Path
-        img_path = Path(content_item.content_data)
+        # Resolver caminho relativo ao diretório do app (funciona no Cloud)
+        app_dir = Path(__file__).resolve().parent.parent
+        img_path = app_dir / content_item.content_data
         if img_path.exists():
             img_bytes = img_path.read_bytes()
             suffix = img_path.suffix.lower()
@@ -185,7 +187,8 @@ def _render_content_fallback(content_item) -> None:
             st.image(content_item.content_data, use_container_width=True)
     elif content_item.content_type == ContentType.VIDEO:
         from pathlib import Path
-        video_path = Path(content_item.content_data)
+        app_dir = Path(__file__).resolve().parent.parent
+        video_path = app_dir / content_item.content_data
         if video_path.exists():
             col1, col2, col3 = st.columns([2, 2, 2])
             with col2:
