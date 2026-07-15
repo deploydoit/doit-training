@@ -111,53 +111,25 @@ def _render_step_content(step: Step) -> None:
     links = [c for c in step.content if c.content_type == ContentType.LINK]
 
     def _render_text(text):
-        """Renderiza texto. Usa st.html() se contém img tags (funciona no Cloud)."""
-        if '<img ' in text:
-            # Converter markdown para HTML básico e renderizar com st.html
+        """Renderiza texto. Trata marcadores [ICON:nome] como imagens inline."""
+        if '[ICON:' in text:
             import re
-            html = text
-            # Converter markdown bold **texto** -> <strong>texto</strong>
-            html = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html)
-            # Converter markdown italic *texto* -> <em>texto</em>
-            html = re.sub(r'(?<!\*)\*([^*]+?)\*(?!\*)', r'<em>\1</em>', html)
-            # Converter markdown listas - item -> <li>item</li>
-            lines = html.split('\n')
-            result_lines = []
-            in_list = False
-            for line in lines:
-                stripped = line.strip()
-                if stripped.startswith('- ') or stripped.startswith('   - '):
-                    if not in_list:
-                        result_lines.append('<ul style="text-align:left;padding-left:1.2rem;">')
-                        in_list = True
-                    item = stripped.lstrip('- ').strip()
-                    result_lines.append(f'<li>{item}</li>')
-                elif stripped.startswith('1. ') or stripped.startswith('2. ') or stripped.startswith('3. ') or stripped.startswith('4. ') or stripped.startswith('5. ') or stripped.startswith('6. '):
-                    if not in_list:
-                        result_lines.append('<ol style="text-align:left;padding-left:1.2rem;">')
-                        in_list = True
-                    item = stripped[3:].strip()
-                    result_lines.append(f'<li>{item}</li>')
-                else:
-                    if in_list:
-                        result_lines.append('</ul>' if result_lines[-2].startswith('<li>') else '</ol>')
-                        in_list = False
-                    if stripped.startswith('## '):
-                        result_lines.append(f'<h2>{stripped[3:]}</h2>')
-                    elif stripped.startswith('### '):
-                        result_lines.append(f'<h3>{stripped[4:]}</h3>')
-                    elif stripped:
-                        result_lines.append(f'<p>{stripped}</p>')
-                    else:
-                        result_lines.append('')
-            if in_list:
-                result_lines.append('</ul>')
-            html_content = '\n'.join(result_lines)
-            # Aplicar estilo consistente
-            styled = f'''<div style="font-family:'Lucida Grande',Arial,sans-serif;font-size:14px;line-height:1.6;color:#404040;">
-{html_content}
-</div>'''
-            st.html(styled)
+            # Mapa de ícones para caminhos de arquivo
+            icon_map = {
+                'star': 'media/agenda/star.png',
+                'lixeira': 'media/lixeira.png',
+            }
+            # Dividir texto pelos marcadores de ícone
+            parts = re.split(r'(\[ICON:\w+\])', text)
+            for part in parts:
+                match = re.match(r'\[ICON:(\w+)\]', part)
+                if match:
+                    icon_name = match.group(1)
+                    icon_path = icon_map.get(icon_name)
+                    if icon_path:
+                        st.image(icon_path, width=24)
+                elif part.strip():
+                    st.markdown(part, unsafe_allow_html=True)
         else:
             st.markdown(text, unsafe_allow_html=True)
 
