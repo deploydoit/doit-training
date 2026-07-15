@@ -110,20 +110,71 @@ def _render_step_content(step: Step) -> None:
     media = [c for c in step.content if c.content_type in (ContentType.IMAGE, ContentType.VIDEO)]
     links = [c for c in step.content if c.content_type == ContentType.LINK]
 
+    def _render_text(text):
+        """Renderiza texto. Usa st.html() se contém img tags (funciona no Cloud)."""
+        if '<img ' in text:
+            # Converter markdown para HTML básico e renderizar com st.html
+            import re
+            html = text
+            # Converter markdown bold **texto** -> <strong>texto</strong>
+            html = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html)
+            # Converter markdown italic *texto* -> <em>texto</em>
+            html = re.sub(r'(?<!\*)\*([^*]+?)\*(?!\*)', r'<em>\1</em>', html)
+            # Converter markdown listas - item -> <li>item</li>
+            lines = html.split('\n')
+            result_lines = []
+            in_list = False
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith('- ') or stripped.startswith('   - '):
+                    if not in_list:
+                        result_lines.append('<ul style="text-align:left;padding-left:1.2rem;">')
+                        in_list = True
+                    item = stripped.lstrip('- ').strip()
+                    result_lines.append(f'<li>{item}</li>')
+                elif stripped.startswith('1. ') or stripped.startswith('2. ') or stripped.startswith('3. ') or stripped.startswith('4. ') or stripped.startswith('5. ') or stripped.startswith('6. '):
+                    if not in_list:
+                        result_lines.append('<ol style="text-align:left;padding-left:1.2rem;">')
+                        in_list = True
+                    item = stripped[3:].strip()
+                    result_lines.append(f'<li>{item}</li>')
+                else:
+                    if in_list:
+                        result_lines.append('</ul>' if result_lines[-2].startswith('<li>') else '</ol>')
+                        in_list = False
+                    if stripped.startswith('## '):
+                        result_lines.append(f'<h2>{stripped[3:]}</h2>')
+                    elif stripped.startswith('### '):
+                        result_lines.append(f'<h3>{stripped[4:]}</h3>')
+                    elif stripped:
+                        result_lines.append(f'<p>{stripped}</p>')
+                    else:
+                        result_lines.append('')
+            if in_list:
+                result_lines.append('</ul>')
+            html_content = '\n'.join(result_lines)
+            # Aplicar estilo consistente
+            styled = f'''<div style="font-family:'Lucida Grande',Arial,sans-serif;font-size:14px;line-height:1.6;color:#404040;">
+{html_content}
+</div>'''
+            st.html(styled)
+        else:
+            st.markdown(text, unsafe_allow_html=True)
+
     # 1. Texto: primeira metade (até ---) antes da mídia
     for content_item in texts:
         text_data = content_item.content_data
         if '---' in text_data:
             parts = text_data.split('---', 1)
-            st.markdown(parts[0].strip(), unsafe_allow_html=True)
+            _render_text(parts[0].strip())
             # 2. Mídia no meio
             if media:
                 for m in media:
                     _render_content_fallback(m)
-            st.markdown(parts[1].strip(), unsafe_allow_html=True)
+            _render_text(parts[1].strip())
         else:
             # Sem separador: texto completo, mídia depois
-            st.markdown(text_data, unsafe_allow_html=True)
+            _render_text(text_data)
             if media:
                 for m in media:
                     _render_content_fallback(m)
