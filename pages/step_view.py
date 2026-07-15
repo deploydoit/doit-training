@@ -151,16 +151,15 @@ def _render_content_fallback(content_item) -> None:
         st.markdown(content_item.content_data)
     elif content_item.content_type == ContentType.IMAGE:
         # Usar st.image nativo — funciona local e no Streamlit Cloud
-        from pathlib import Path
         img_path = content_item.content_data
         # Larguras personalizadas por imagem (em pixels)
         max_width_por_imagem = {
             "visualizacao.png": 150,
             "notificacaorecado.png": 50,
-            "salvar.png": 200,
-            "salvareenviar.png": 200,
-            "criarata.png": 200,
-            "lancarhoras.png": 200,
+            "salvar.png": 180,
+            "salvareenviar.png": 180,
+            "criarata.png": 180,
+            "lancarhoras.png": 180,
         }
         # Verificar se tem largura customizada
         custom_width = None
@@ -172,7 +171,8 @@ def _render_content_fallback(content_item) -> None:
             if custom_width:
                 st.image(img_path, width=custom_width)
             else:
-                st.image(img_path, use_container_width=True)
+                # Padrão: 440px para imagens normais
+                st.image(img_path, width=440)
         except Exception:
             st.caption(f"Imagem não encontrada: {img_path}")
     elif content_item.content_type == ContentType.VIDEO:
